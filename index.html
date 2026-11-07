@@ -3,342 +3,330 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="theme-color" content="#0f1226" />
-<title>보이스 · 녹음 받아쓰기 번역</title>
+<meta name="theme-color" content="#f5f7fb" />
+<title>보이스</title>
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="apple-touch-icon" href="icon-192.png" />
 <style>
   :root{
-    --bg1:#0f1226; --bg2:#151a36; --panel:rgba(255,255,255,.04); --panelSolid:#1a2142;
-    --txt:#eef1fb; --muted:#9aa3c7; --line:rgba(255,255,255,.08);
-    --accent:#6d8bff; --accent2:#8b6dff; --mint:#38e0b0; --danger:#ff5d73;
-    --radius:20px; --shadow:0 10px 30px rgba(0,0,0,.35);
+    --bg:#f5f7fb; --card:#ffffff; --txt:#1d2433; --muted:#8a93a6; --line:#e8ecf3;
+    --mint:#12b886; --mintSoft:#e6f8f1; --blue:#4c6ef5; --blueSoft:#edf2ff;
+    --red:#fa5252; --redSoft:#fff0f0; --r:22px;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;height:100%}
-  body{
-    background:
-      radial-gradient(1200px 600px at 80% -10%, rgba(139,109,255,.20), transparent 60%),
-      radial-gradient(900px 500px at -10% 10%, rgba(109,139,255,.18), transparent 55%),
-      linear-gradient(180deg,var(--bg1),var(--bg2));
-    background-attachment:fixed;
-    color:var(--txt);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;
-    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-    display:flex;flex-direction:column;min-height:100%;transition:filter .3s;
-  }
-  body.discreet{filter:brightness(.16)}
-  header{padding:20px 20px 10px;display:flex;align-items:center;gap:12px}
-  .logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));
-    display:grid;place-items:center;box-shadow:var(--shadow)}
-  .logo svg{width:22px;height:22px;fill:#fff}
-  header h1{font-size:19px;margin:0;font-weight:800;letter-spacing:-.2px}
-  header h1 small{display:block;font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.3px}
-  .live-chip{margin-left:auto;display:none;align-items:center;gap:6px;background:rgba(255,93,115,.14);
-    border:1px solid rgba(255,93,115,.35);color:#ffb3bf;border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700}
-  .live-chip .d{width:8px;height:8px;border-radius:50%;background:var(--danger);animation:pulse 1.3s infinite}
-  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,93,115,.6)}70%{box-shadow:0 0 0 9px rgba(255,93,115,0)}100%{box-shadow:0 0 0 0 rgba(255,93,115,0)}}
+  body{background:var(--bg);color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"Pretendard","Noto Sans KR","Segoe UI",Roboto,sans-serif;
+    padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);min-height:100%;transition:filter .3s}
+  body.dim{filter:brightness(.15)}
+  .wrap{max-width:520px;margin:0 auto;padding:0 16px 110px}
 
-  .tabs{display:flex;gap:6px;margin:6px 18px 2px;background:var(--panel);border:1px solid var(--line);
-    border-radius:16px;padding:5px;backdrop-filter:blur(8px)}
-  .tabs button{flex:1;background:transparent;border:none;color:var(--muted);padding:11px 6px;border-radius:12px;
-    font-weight:700;font-size:14px;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:6px}
-  .tabs button.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:var(--shadow)}
+  header{display:flex;align-items:center;gap:10px;padding:18px 2px 14px}
+  header h1{margin:0;font-size:22px;font-weight:800;letter-spacing:-.4px}
+  .icon-btn{margin-left:auto;border:none;background:var(--card);width:42px;height:42px;border-radius:14px;
+    font-size:19px;box-shadow:0 1px 3px rgba(0,0,0,.06);cursor:pointer}
+  .rec-chip{display:none;align-items:center;gap:6px;background:var(--redSoft);color:var(--red);
+    border-radius:999px;padding:6px 11px;font-size:12px;font-weight:700}
+  .rec-chip i{width:7px;height:7px;border-radius:50%;background:var(--red);animation:blink 1s infinite}
+  @keyframes blink{50%{opacity:.25}}
 
-  main{flex:1;padding:12px 18px 130px;overflow:auto}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:16px;
-    backdrop-filter:blur(10px);box-shadow:0 1px 0 rgba(255,255,255,.03) inset}
-  .card.solid{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02))}
-  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-  .col{flex:1;min-width:130px}
-  label{font-size:12px;color:var(--muted);display:block;margin-bottom:7px;font-weight:600;letter-spacing:.2px}
-  select,textarea{width:100%;background:var(--panelSolid);color:var(--txt);border:1px solid var(--line);
-    border-radius:14px;padding:13px;outline:none;font-size:15px;font-family:inherit}
-  select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%239aa3c7' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
-  textarea{min-height:110px;resize:vertical;line-height:1.55}
-  select:focus,textarea:focus{border-color:var(--accent)}
+  .card{background:var(--card);border-radius:var(--r);padding:18px;margin-bottom:14px;box-shadow:0 1px 3px rgba(20,30,60,.05)}
 
-  .timer{font-variant-numeric:tabular-nums;font-size:52px;font-weight:800;text-align:center;letter-spacing:1px;margin:10px 0 2px}
-  .status{text-align:center;color:var(--muted);font-size:13px;min-height:18px;font-weight:600}
-  .bar{height:34px;display:flex;align-items:center;gap:3px;justify-content:center;margin:12px 0 2px}
-  .bar span{width:3px;height:6px;background:linear-gradient(var(--accent),var(--accent2));border-radius:3px;opacity:.45;transition:height .12s}
-  .controls{display:flex;justify-content:center;align-items:center;margin-top:12px}
-  .rec-btn{width:92px;height:92px;border-radius:50%;border:none;cursor:pointer;display:grid;place-items:center;
-    background:radial-gradient(circle at 30% 25%,#ff8795,var(--danger));
-    box-shadow:0 10px 30px rgba(255,93,115,.45),0 0 0 8px rgba(255,93,115,.10);transition:transform .08s}
-  .rec-btn:active{transform:scale(.94)}
-  .rec-btn .mic{display:block}.rec-btn .mic svg{width:38px;height:38px;fill:#fff}
-  .rec-btn .stop{display:none;width:28px;height:28px;border-radius:7px;background:#fff}
-  .rec-btn.recording{background:radial-gradient(circle at 30% 25%,#5566aa,#2b335e)}
-  .rec-btn.recording .mic{display:none}.rec-btn.recording .stop{display:block}
-  .rec-label{text-align:center;color:var(--muted);font-size:13px;margin-top:12px;font-weight:700}
+  /* 언어 선택 */
+  .langs{display:flex;align-items:center;gap:8px}
+  .langs select{flex:1;min-width:0}
+  .langs .to{font-size:18px;color:var(--muted)}
+  select{appearance:none;width:100%;border:1.5px solid var(--line);background:#fafbfd;border-radius:14px;
+    padding:12px 12px;font-size:15px;font-weight:600;color:var(--txt);font-family:inherit;outline:none}
+  select:focus{border-color:var(--blue)}
 
-  .transcript{white-space:pre-wrap;line-height:1.65;min-height:54px;font-size:16.5px}
-  .transcript.empty,.result.empty{color:var(--muted)}
-  .transcript .interim{color:var(--muted)}
-  .result{white-space:pre-wrap;line-height:1.65;min-height:54px;font-size:16.5px;color:var(--mint);font-weight:500}
+  /* 녹음 */
+  .rec{text-align:center;padding:26px 18px 22px}
+  .timer{font-size:46px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-1px}
+  .sub{color:var(--muted);font-size:14px;margin-top:4px;min-height:20px}
+  .rec-btn{margin:20px auto 0;width:96px;height:96px;border-radius:50%;border:none;cursor:pointer;
+    background:var(--red);font-size:40px;line-height:96px;color:#fff;
+    box-shadow:0 10px 26px rgba(250,82,82,.35);transition:transform .1s,background .2s}
+  .rec-btn:active{transform:scale(.93)}
+  .rec-btn.on{background:#343a40;box-shadow:0 10px 26px rgba(52,58,64,.3);animation:ring 1.6s infinite}
+  @keyframes ring{0%{box-shadow:0 0 0 0 rgba(250,82,82,.45)}70%{box-shadow:0 0 0 18px rgba(250,82,82,0)}100%{box-shadow:0 0 0 0 rgba(250,82,82,0)}}
 
-  .btn{border:none;border-radius:14px;padding:13px 16px;font-weight:700;color:#fff;cursor:pointer;transition:transform .05s,opacity .2s;font-size:15px;font-family:inherit}
-  .btn:active{transform:scale(.97)}
-  .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:var(--shadow)}
-  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--txt)}
-  .btn.small{padding:9px 13px;font-size:13px;border-radius:11px}
-  .btn[disabled]{opacity:.4}
+  /* 원문 / 번역 */
+  .pane-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .pane-h b{font-size:14px;font-weight:700}
+  .tag{font-size:12px;font-weight:700;padding:4px 9px;border-radius:999px}
+  .tag.src{background:var(--blueSoft);color:var(--blue)}
+  .tag.tr{background:var(--mintSoft);color:var(--mint)}
+  .text{font-size:17px;line-height:1.65;min-height:52px;white-space:pre-wrap;word-break:keep-all;overflow-wrap:anywhere}
+  .text.tr{color:#0b7a5a}
+  .ph{color:var(--muted);font-size:15px}
+  .interim{color:var(--muted)}
+  .mini{border:none;background:#f1f3f7;border-radius:10px;padding:7px 11px;font-size:13px;font-weight:600;cursor:pointer;color:var(--txt);font-family:inherit}
 
-  .seg{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--panelSolid);border:1px solid var(--line);border-radius:14px;padding:10px 14px}
-  .switch{position:relative;width:50px;height:30px;flex:0 0 auto}
-  .switch input{opacity:0;width:0;height:0}
-  .slider{position:absolute;inset:0;background:#2a3157;border-radius:999px;transition:.2s;cursor:pointer}
-  .slider::before{content:"";position:absolute;width:22px;height:22px;left:4px;top:4px;background:#fff;border-radius:50%;transition:.2s}
-  .switch input:checked + .slider{background:linear-gradient(135deg,var(--mint),#39c0e0)}
-  .switch input:checked + .slider::before{transform:translateX(20px)}
+  textarea{width:100%;min-height:120px;border:1.5px solid var(--line);background:#fafbfd;border-radius:14px;
+    padding:13px;font-size:16px;line-height:1.6;font-family:inherit;color:var(--txt);outline:none;resize:vertical}
+  textarea:focus{border-color:var(--blue)}
 
-  .hint{font-size:12.5px;color:var(--muted);margin-top:8px;line-height:1.55}
-  .muted-sm{font-size:12px;color:var(--muted)}
-  .rec-item{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}
-  .rec-item:last-child{border-bottom:none}
-  .rec-item .meta{flex:1;min-width:0}
-  .rec-item .meta b{font-weight:700;font-size:14px;display:block}
-  audio{width:100%;margin-top:8px;height:38px}
-  .toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%) translateY(10px);background:#000c;color:#fff;
-    padding:11px 18px;border-radius:999px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:60;font-weight:600}
-  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-  .hidden{display:none !important}
-  .spin{display:inline-block;width:13px;height:13px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:6px}
-  @keyframes sp{to{transform:rotate(360deg)}}
-  .arrow{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:20px;margin:-4px 0}
+  /* 보관함 */
+  .item{padding:16px 0;border-bottom:1px solid var(--line)}
+  .item:first-child{padding-top:2px}
+  .item:last-child{border-bottom:none;padding-bottom:2px}
+  .item-h{display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:700}
+  .item-h span{color:var(--muted);font-weight:600;font-size:13px}
+  audio{width:100%;height:40px;margin:10px 0 6px}
+  .item .text{font-size:15px;min-height:0;margin-top:8px}
+  .lbl{font-size:12px;font-weight:700;margin-top:10px}
+  .lbl.src{color:var(--blue)} .lbl.tr{color:var(--mint)}
+  .dl{display:flex;gap:8px;margin-top:12px}
+  .dl button{flex:1;border:none;border-radius:12px;padding:11px 6px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+  .dl .a{background:var(--blueSoft);color:var(--blue)}
+  .dl .t{background:var(--mintSoft);color:var(--mint)}
+  .dl .x{flex:0 0 46px;background:#f1f3f7}
+  .empty{text-align:center;color:var(--muted);padding:30px 0;font-size:15px}
+  .empty div{font-size:40px;margin-bottom:8px}
+
+  /* 하단 탭 */
+  nav{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);
+    border-top:1px solid var(--line);display:flex;justify-content:center;padding:8px 0 calc(8px + env(safe-area-inset-bottom));z-index:10}
+  nav .in{display:flex;width:100%;max-width:520px}
+  nav button{flex:1;border:none;background:none;font-family:inherit;cursor:pointer;color:var(--muted);
+    font-size:12px;font-weight:700;padding:4px 0;display:flex;flex-direction:column;align-items:center;gap:2px}
+  nav button .e{font-size:23px;filter:grayscale(1);opacity:.55;transition:.2s}
+  nav button.on{color:var(--txt)}
+  nav button.on .e{filter:none;opacity:1;transform:scale(1.08)}
+  .hidden{display:none!important}
+  .toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);background:#1d2433;color:#fff;padding:11px 18px;
+    border-radius:999px;font-size:14px;font-weight:600;opacity:0;transition:.25s;pointer-events:none;z-index:20;white-space:nowrap}
+  .toast.show{opacity:1}
 </style>
 </head>
 <body>
-<header>
-  <div class="logo"><svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Z"/><path d="M19 11a1 1 0 1 0-2 0 5 5 0 0 1-10 0 1 1 0 1 0-2 0 7 7 0 0 0 6 6.93V20H8a1 1 0 1 0 0 2h8a1 1 0 1 0 0-2h-3v-2.07A7 7 0 0 0 19 11Z"/></svg></div>
-  <h1>보이스<small>녹음 · 받아쓰기 · 번역</small></h1>
-  <span class="live-chip" id="liveChip"><span class="d"></span>녹음중</span>
-</header>
+<div class="wrap">
+  <header>
+    <h1>🎙️ 보이스</h1>
+    <span class="rec-chip" id="chip"><i></i>녹음 중</span>
+    <button class="icon-btn" id="dimBtn" title="화면 어둡게">🌙</button>
+  </header>
 
-<div class="tabs">
-  <button data-tab="rec" class="active">🎙️ 녹음</button>
-  <button data-tab="text">🌐 번역</button>
-  <button data-tab="list">📁 보관함</button>
+  <!-- 🎙️ 녹음 -->
+  <section id="tab-rec">
+    <div class="card">
+      <div class="langs">
+        <select id="recLang" aria-label="말하는 언어"></select>
+        <span class="to">➜</span>
+        <select id="recTgt" aria-label="번역 언어"></select>
+      </div>
+    </div>
+
+    <div class="card rec">
+      <div class="timer" id="timer">00:00</div>
+      <div class="sub" id="sub">버튼을 누르면 녹음이 시작돼요</div>
+      <button class="rec-btn" id="recBtn" aria-label="녹음">🎙️</button>
+    </div>
+
+    <div class="card">
+      <div class="pane-h"><b>🗣️ 원문</b><button class="mini" data-copy="src">📋 복사</button></div>
+      <div class="text" id="srcBox"><span class="ph">말하면 여기에 글자로 나타나요</span></div>
+    </div>
+    <div class="card">
+      <div class="pane-h"><b>🌐 번역</b><button class="mini" data-copy="tr">📋 복사</button></div>
+      <div class="text tr" id="trBox"><span class="ph">번역이 자동으로 함께 나와요</span></div>
+    </div>
+  </section>
+
+  <!-- 🌐 텍스트 번역 -->
+  <section id="tab-text" class="hidden">
+    <div class="card">
+      <div class="langs">
+        <select id="srcLang" aria-label="원문 언어"></select>
+        <button class="mini" id="swap" aria-label="언어 바꾸기">🔄</button>
+        <select id="tgtLang" aria-label="번역 언어"></select>
+      </div>
+    </div>
+    <div class="card">
+      <div class="pane-h"><b>✏️ 입력</b><button class="mini" id="clearIn">🧹 지우기</button></div>
+      <textarea id="srcText" placeholder="입력하면 바로 번역돼요"></textarea>
+    </div>
+    <div class="card">
+      <div class="pane-h"><b>🌐 번역</b>
+        <span><button class="mini" id="speak">🔊</button> <button class="mini" id="copyOut">📋 복사</button></span></div>
+      <div class="text tr" id="outBox"><span class="ph">번역 결과가 여기에 나와요</span></div>
+    </div>
+  </section>
+
+  <!-- 📁 보관함 -->
+  <section id="tab-list" class="hidden">
+    <div class="card" id="list"></div>
+  </section>
 </div>
 
-<main>
-  <!-- 녹음 -->
-  <section id="tab-rec">
-    <div class="card solid">
-      <div class="row">
-        <div class="col"><label>말하는 언어</label><select id="recLang"></select></div>
-      </div>
-      <div class="timer" id="timer">00:00</div>
-      <div class="status" id="recStatus">아래 마이크를 눌러 녹음을 시작하세요</div>
-      <div class="bar" id="bar"></div>
-      <div class="controls">
-        <button class="rec-btn" id="recBtn" aria-label="녹음 시작/정지">
-          <span class="mic"><svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Z"/><path d="M19 11a1 1 0 1 0-2 0 5 5 0 0 1-10 0 1 1 0 1 0-2 0 7 7 0 0 0 6 6.93V20H8a1 1 0 1 0 0 2h8a1 1 0 1 0 0-2h-3v-2.07A7 7 0 0 0 19 11Z"/></svg></span>
-          <span class="stop"></span>
-        </button>
-      </div>
-      <div class="rec-label" id="recLabel">탭하여 녹음 시작</div>
-    </div>
-
-    <div class="card">
-      <label>받아쓰기 (실시간)</label>
-      <div class="transcript empty" id="transcript">녹음을 시작하면 말이 글자로 나타납니다.</div>
-      <div class="row" style="margin-top:12px">
-        <button class="btn ghost small" id="copyT">복사</button>
-        <button class="btn ghost small" id="clearT">지우기</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="seg" style="margin-bottom:12px">
-        <div><b style="font-weight:700">실시간 번역</b><div class="muted-sm">말하는 즉시 번역돼요</div></div>
-        <label class="switch"><input type="checkbox" id="liveTrans"><span class="slider"></span></label>
-      </div>
-      <div class="row" id="liveTransCtrl" style="display:none">
-        <div class="col"><label>번역할 언어</label><select id="recTgt"></select></div>
-      </div>
-      <div class="result empty" id="liveResult" style="margin-top:12px;display:none">번역 결과가 여기에 표시됩니다.</div>
-    </div>
-
-    <div class="card">
-      <div class="seg">
-        <div><b style="font-weight:700">디스크리트 모드</b><div class="muted-sm">화면 어둡게 · 무음</div></div>
-        <label class="switch"><input type="checkbox" id="discreet"><span class="slider"></span></label>
-      </div>
-      <div class="hint">마이크 표시등(초록불)은 OS 보안 기능이라 끌 수 없습니다.</div>
-    </div>
-  </section>
-
-  <!-- 번역 -->
-  <section id="tab-text" class="hidden">
-    <div class="card solid">
-      <div class="row">
-        <div class="col"><label>원문 언어</label><select id="srcLang"></select></div>
-        <div class="col"><label>번역 언어</label><select id="tgtLang"></select></div>
-      </div>
-      <div style="text-align:center;margin:8px 0"><button class="btn ghost small" id="swap">⇅ 언어 바꾸기</button></div>
-      <label>원문</label>
-      <textarea id="srcText" placeholder="여기에 입력하면 아래에서 바로 번역돼요"></textarea>
-    </div>
-    <div class="arrow">↓</div>
-    <div class="card">
-      <label id="transOutLabel">번역 결과</label>
-      <div class="result empty" id="transOut">입력하는 즉시 결과가 표시됩니다.</div>
-      <div class="row" style="margin-top:12px">
-        <button class="btn ghost small" id="copyTrans">복사</button>
-        <button class="btn ghost small" id="speakTrans">🔊 듣기</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- 보관함 -->
-  <section id="tab-list" class="hidden">
-    <div class="card">
-      <label>저장된 녹음 (이 기기에 보관)</label>
-      <div id="recList"><div class="hint">아직 녹음이 없습니다.</div></div>
-    </div>
-  </section>
-</main>
-
+<nav><div class="in">
+  <button data-tab="rec" class="on"><span class="e">🎙️</span>녹음</button>
+  <button data-tab="text"><span class="e">🌐</span>번역</button>
+  <button data-tab="list"><span class="e">📁</span>보관함</button>
+</div></nav>
 <div class="toast" id="toast"></div>
 
 <script>
-const LANGS=[["ko-KR","한국어"],["en-US","English"],["ja-JP","日本語"],["zh-CN","中文(简体)"],["zh-TW","中文(繁體)"],["es-ES","Español"],["fr-FR","Français"],["de-DE","Deutsch"],["vi-VN","Tiếng Việt"],["th-TH","ไทย"],["id-ID","Indonesia"],["ru-RU","Русский"],["pt-BR","Português"],["it-IT","Italiano"],["ar-SA","العربية"],["hi-IN","हिन्दी"]];
-const short=c=>c.split("-")[0];
+const LANGS=[["ko-KR","🇰🇷 한국어"],["en-US","🇺🇸 English"],["ja-JP","🇯🇵 日本語"],["zh-CN","🇨🇳 中文(简)"],["zh-TW","🇹🇼 中文(繁)"],
+  ["es-ES","🇪🇸 Español"],["fr-FR","🇫🇷 Français"],["de-DE","🇩🇪 Deutsch"],["vi-VN","🇻🇳 Tiếng Việt"],["th-TH","🇹🇭 ไทย"],
+  ["id-ID","🇮🇩 Indonesia"],["ru-RU","🇷🇺 Русский"],["pt-BR","🇧🇷 Português"],["it-IT","🇮🇹 Italiano"],["ar-SA","🇸🇦 العربية"],["hi-IN","🇮🇳 हिन्दी"]];
 const $=id=>document.getElementById(id);
-function fill(sel,def){LANGS.forEach(([c,n])=>{const o=document.createElement("option");o.value=c;o.textContent=n;if(c===def)o.selected=true;sel.appendChild(o);});}
-fill(recLang,"ko-KR");fill(recTgt,"en-US");fill(srcLang,"ko-KR");fill(tgtLang,"en-US");
+const nameOf=c=>(LANGS.find(l=>l[0]===c)||[,c])[1].replace(/^\S+\s/,"");
+const store={get(k,d){try{return localStorage.getItem(k)||d}catch{return d}},set(k,v){try{localStorage.setItem(k,v)}catch{}}};
+function fill(sel,key,def){LANGS.forEach(([c,n])=>sel.add(new Option(n,c)));sel.value=store.get(key,def);sel.addEventListener("change",()=>store.set(key,sel.value));}
+fill($("recLang"),"recLang","ko-KR");fill($("recTgt"),"recTgt","en-US");fill($("srcLang"),"srcLang","ko-KR");fill($("tgtLang"),"tgtLang","en-US");
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const debounce=(f,ms)=>{let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>f(...a),ms)}};
+let tt;function toast(m){const t=$("toast");t.textContent=m;t.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("show"),1700)}
+const fmt=ms=>{const s=Math.floor(ms/1000);return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")};
 
-function debounce(fn,ms){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);};}
-let toastT;function toast(m){const t=$("toast");t.textContent=m;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),1700);}
-function escapeHtml(s){return s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
-
-// 탭
-document.querySelectorAll(".tabs button").forEach(b=>{b.onclick=()=>{
-  document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));b.classList.add("active");
+/* 탭 */
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("on",x===b));
   ["rec","text","list"].forEach(t=>$("tab-"+t).classList.toggle("hidden",t!==b.dataset.tab));
   if(b.dataset.tab==="list")renderList();
-};});
+});
+$("dimBtn").onclick=()=>{const on=document.body.classList.toggle("dim");toast(on?"🌙 화면을 어둡게 했어요":"☀️ 원래 밝기")};
 
-// 디스크리트
-discreet.onchange=()=>document.body.classList.toggle("discreet",discreet.checked);
-
-// ===== 번역 API (MyMemory, 무료) =====
+/* 번역 */
 async function translate(text,from,to){
-  if(short(from)===short(to))return text;
-  const gl=c=>c==="zh-CN"||c==="zh-TW"?c:short(c);
+  const a=from.split("-")[0],b=to.split("-")[0];
+  if(a===b&&from===to)return text;
+  const g=c=>c.startsWith("zh")?c:c.split("-")[0];
   try{
-    const g="https://translate.googleapis.com/translate_a/single?client=gtx&dt=t&sl="+gl(from)+"&tl="+gl(to)+"&q="+encodeURIComponent(text);
-    const gr=await fetch(g);
-    if(gr.ok){const gj=await gr.json();const s=gj[0].map(x=>x[0]).join("");if(s)return s;}
+    const r=await fetch("https://translate.googleapis.com/translate_a/single?client=gtx&dt=t&sl="+g(from)+"&tl="+g(to)+"&q="+encodeURIComponent(text));
+    if(r.ok){const j=await r.json();const s=j[0].map(x=>x[0]).join("");if(s)return s}
   }catch{}
-  const url="https://api.mymemory.translated.net/get?q="+encodeURIComponent(text)+"&langpair="+short(from)+"|"+short(to);
-  const r=await fetch(url);if(!r.ok)throw 0;const j=await r.json();
-  return (j.responseData&&j.responseData.translatedText)||text;
+  const r=await fetch("https://api.mymemory.translated.net/get?q="+encodeURIComponent(text)+"&langpair="+a+"|"+b);
+  if(!r.ok)throw new Error("net");
+  return (await r.json()).responseData.translatedText;
 }
 
-// ===== 텍스트 탭: 실시간 번역 =====
-const runTextTrans=debounce(async()=>{
-  const t=srcText.value.trim();const out=$("transOut");
-  if(!t){out.textContent="입력하는 즉시 결과가 표시됩니다.";out.classList.add("empty");return;}
-  out.classList.remove("empty");out.innerHTML='<span class="spin"></span>번역 중…';
-  try{out.textContent=await translate(t,srcLang.value,tgtLang.value);}catch{out.textContent="번역 실패 — 네트워크를 확인하세요";}
-},600);
-srcText.addEventListener("input",runTextTrans);
-srcLang.onchange=runTextTrans;tgtLang.onchange=runTextTrans;
-swap.onclick=()=>{const a=srcLang.value;srcLang.value=tgtLang.value;tgtLang.value=a;runTextTrans();};
-copyTrans.onclick=()=>navigator.clipboard.writeText($("transOut").textContent).then(()=>toast("복사됨"));
-speakTrans.onclick=()=>{const u=new SpeechSynthesisUtterance($("transOut").textContent);u.lang=tgtLang.value;speechSynthesis.speak(u);};
-
-// ===== 녹음 탭: 실시간 번역 토글 =====
-liveTrans.onchange=()=>{const on=liveTrans.checked;$("liveTransCtrl").style.display=on?"flex":"none";$("liveResult").style.display=on?"block":"none";if(on)runLiveTrans();};
-recTgt.onchange=()=>runLiveTrans();
-const runLiveTrans=debounce(async()=>{
-  if(!liveTrans.checked)return;const t=finalText.trim();const out=$("liveResult");
-  if(!t){out.textContent="말하면 즉시 번역돼요.";out.classList.add("empty");return;}
-  out.classList.remove("empty");out.innerHTML='<span class="spin"></span>번역 중…';
-  try{out.textContent=await translate(t,recLang.value,recTgt.value);}catch{out.textContent="번역 대기 중…";}
-},700);
-
-// ===== 녹음 + 받아쓰기 =====
-let mediaRecorder,chunks=[],stream,startTime,timerInt,recognition,recognizing=false,wakeLock=null,finalText="";
+/* 녹음 + 받아쓰기 + 번역(항상) */
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-function fmt(ms){const s=Math.floor(ms/1000);return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");}
-function setBars(){const b=$("bar");b.innerHTML="";for(let i=0;i<26;i++)b.appendChild(document.createElement("span"));}
-let barRAF;function barAnim(){document.querySelectorAll("#bar span").forEach(s=>{s.style.height=(6+Math.random()*24)+"px";s.style.opacity=.4+Math.random()*.6;});barRAF=setTimeout(()=>requestAnimationFrame(barAnim),110);}
-function stopBars(){clearTimeout(barRAF);document.querySelectorAll("#bar span").forEach(s=>{s.style.height="6px";s.style.opacity=.3;});}
-
-async function startRec(){
-  try{stream=await navigator.mediaDevices.getUserMedia({audio:true});}
-  catch(e){toast("마이크 권한이 필요합니다");$("recStatus").textContent="마이크 권한을 허용해 주세요";return;}
-  chunks=[];
-  let mime=MediaRecorder.isTypeSupported("audio/webm")?"audio/webm":(MediaRecorder.isTypeSupported("audio/mp4")?"audio/mp4":"");
-  mediaRecorder=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);
-  mediaRecorder.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
-  mediaRecorder.onstop=saveRecording;mediaRecorder.start();
-  startTime=Date.now();timerInt=setInterval(()=>$("timer").textContent=fmt(Date.now()-startTime),250);
-  recBtn.classList.add("recording");$("liveChip").style.display="flex";
-  $("recStatus").textContent="녹음 중…";$("recLabel").textContent="탭하여 정지";barAnim();
-  try{if("wakeLock"in navigator)wakeLock=await navigator.wakeLock.request("screen");}catch{}
-  startRecognition();
+let mr,chunks=[],stream,t0,timer,rec,listening=false,wake=null,interim="";
+let segs=[]; // {src, tr, p}
+function srcText(){return segs.map(s=>s.src).join(" ").trim()}
+function trText(){return segs.map(s=>s.tr||"").join(" ").trim()}
+function render(){
+  const s=srcText();
+  $("srcBox").innerHTML=(s||interim)?esc(s)+(interim?' <span class="interim">'+esc(interim)+"</span>":""):'<span class="ph">말하면 여기에 글자로 나타나요</span>';
+  const t=trText(),pending=segs.some(x=>x.tr==null);
+  $("trBox").innerHTML=t?esc(t)+(pending?' <span class="interim">…</span>':""):(pending?'<span class="ph">번역 중…</span>':'<span class="ph">번역이 자동으로 함께 나와요</span>');
 }
-function stopRec(){
-  if(mediaRecorder&&mediaRecorder.state!=="inactive")mediaRecorder.stop();
-  if(stream)stream.getTracks().forEach(t=>t.stop());
-  clearInterval(timerInt);recBtn.classList.remove("recording");$("liveChip").style.display="none";
-  $("recStatus").textContent="저장됨 · 보관함에서 확인하세요";$("recLabel").textContent="탭하여 녹음 시작";stopBars();
-  if(recognition){recognizing=false;try{recognition.stop();}catch{}}
-  if(wakeLock){try{wakeLock.release();}catch{}wakeLock=null;}
+function addSeg(text){
+  const seg={src:text.trim(),tr:null};if(!seg.src)return;
+  segs.push(seg);render();
+  seg.p=translate(seg.src,$("recLang").value,$("recTgt").value).then(r=>seg.tr=r).catch(()=>seg.tr="(번역 실패)").finally(render);
 }
-recBtn.onclick=()=>{(mediaRecorder&&mediaRecorder.state==="recording")?stopRec():startRec();};
+$("recTgt").addEventListener("change",()=>segs.forEach(seg=>{seg.tr=null;seg.p=translate(seg.src,$("recLang").value,$("recTgt").value).then(r=>seg.tr=r).catch(()=>seg.tr="(번역 실패)").finally(render)}));
 
-function startRecognition(){
-  if(!SR){$("recStatus").textContent="녹음 중… (받아쓰기는 Chrome에서 지원)";return;}
-  recognition=new SR();recognition.lang=recLang.value;recognition.continuous=true;recognition.interimResults=true;recognition.maxAlternatives=1;recognizing=true;
-  recognition.onresult=e=>{
-    let interim="";
-    for(let i=e.resultIndex;i<e.results.length;i++){const r=e.results[i];if(r.isFinal)finalText+=r[0].transcript+" ";else interim+=r[0].transcript;}
-    const el=$("transcript");el.classList.remove("empty");
-    el.innerHTML=escapeHtml(finalText)+'<span class="interim">'+escapeHtml(interim)+'</span>';el.scrollTop=el.scrollHeight;
-    runLiveTrans();
+async function start(){
+  try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}})}
+  catch{toast("🎙️ 마이크 권한을 허용해 주세요");return}
+  segs=[];interim="";render();chunks=[];
+  const mime=["audio/webm;codecs=opus","audio/webm","audio/mp4"].find(m=>window.MediaRecorder&&MediaRecorder.isTypeSupported(m));
+  mr=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);
+  mr.ondataavailable=e=>e.data.size&&chunks.push(e.data);
+  mr.onstop=save;mr.start(1000);
+  t0=Date.now();timer=setInterval(()=>$("timer").textContent=fmt(Date.now()-t0),250);
+  $("recBtn").classList.add("on");$("recBtn").textContent="⏹️";$("chip").style.display="flex";
+  $("sub").textContent=SR?"듣고 있어요… 다시 누르면 저장돼요":"녹음 중 (받아쓰기는 Chrome에서 지원)";
+  try{wake=await navigator.wakeLock.request("screen")}catch{}
+  if(SR)listen();
+}
+function stop(){
+  listening=false;try{rec&&rec.stop()}catch{}
+  if(interim){addSeg(interim);interim=""}
+  if(mr&&mr.state!=="inactive")mr.stop();
+  stream&&stream.getTracks().forEach(t=>t.stop());
+  clearInterval(timer);$("recBtn").classList.remove("on");$("recBtn").textContent="🎙️";$("chip").style.display="none";
+  $("sub").textContent="💾 저장 중…";
+  try{wake&&wake.release()}catch{}wake=null;
+}
+$("recBtn").onclick=()=>mr&&mr.state==="recording"?stop():start();
+
+function listen(){
+  rec=new SR();rec.lang=$("recLang").value;rec.continuous=true;rec.interimResults=true;listening=true;
+  rec.onresult=e=>{
+    interim="";
+    for(let i=e.resultIndex;i<e.results.length;i++){const r=e.results[i];r.isFinal?addSeg(r[0].transcript):interim+=r[0].transcript}
+    render();
   };
-  recognition.onerror=ev=>{if(ev.error==="not-allowed"||ev.error==="service-not-allowed"){$("recStatus").textContent="받아쓰기 권한이 차단됨";}};
-  recognition.onend=()=>{if(recognizing){try{recognition.start();}catch{}}};
-  try{recognition.start();}catch{}
+  rec.onerror=e=>{if(e.error==="not-allowed")$("sub").textContent="받아쓰기 권한이 꺼져 있어요"};
+  rec.onend=()=>{if(listening){if(interim){addSeg(interim);interim=""}setTimeout(()=>{try{rec.start()}catch{}},150)}};
+  try{rec.start()}catch{}
 }
-copyT.onclick=()=>navigator.clipboard.writeText(finalText.trim()).then(()=>toast("복사됨"));
-clearT.onclick=()=>{finalText="";const el=$("transcript");el.classList.add("empty");el.textContent="녹음을 시작하면 말이 글자로 나타납니다.";runLiveTrans();};
 
-// ===== 저장 (IndexedDB) =====
-let db;const DBN="vr-db",STORE="recs";
-function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open(DBN,1);r.onupgradeneeded=()=>r.result.createObjectStore(STORE,{keyPath:"id"});r.onsuccess=()=>{db=r.result;res();};r.onerror=()=>rej();});}
-function saveRecording(){
-  if(!chunks.length)return;
-  const blob=new Blob(chunks,{type:chunks[0].type||"audio/webm"});
-  const rec={id:Date.now(),blob,dur:Date.now()-startTime,date:new Date().toISOString(),text:finalText.trim()};
-  const tx=db.transaction(STORE,"readwrite");tx.objectStore(STORE).put(rec);tx.oncomplete=()=>toast("녹음 저장됨");
+document.querySelectorAll("[data-copy]").forEach(b=>b.onclick=()=>{
+  const v=b.dataset.copy==="src"?srcText():trText();
+  if(!v)return toast("복사할 내용이 없어요");
+  navigator.clipboard.writeText(v).then(()=>toast("📋 복사했어요"));
+});
+
+/* 저장 (IndexedDB) */
+let db;
+const dbReady=new Promise(res=>{try{const r=indexedDB.open("vr-db",1);r.onupgradeneeded=()=>r.result.createObjectStore("recs",{keyPath:"id"});r.onsuccess=()=>{db=r.result;res()};r.onerror=()=>res()}catch{res()}});
+async function save(){
+  const dur=Date.now()-t0;
+  await Promise.race([Promise.all(segs.map(s=>s.p)),new Promise(r=>setTimeout(r,6000))]);
+  if(!chunks.length){$("sub").textContent="버튼을 누르면 녹음이 시작돼요";return}
+  const item={id:Date.now(),blob:new Blob(chunks,{type:chunks[0].type||"audio/webm"}),dur,date:new Date().toISOString(),
+    from:$("recLang").value,to:$("recTgt").value,src:srcText(),tr:trText()};
+  await dbReady;
+  if(!db){toast("저장소를 쓸 수 없어요");return}
+  const tx=db.transaction("recs","readwrite");tx.objectStore("recs").put(item);
+  tx.oncomplete=()=>{toast("✅ 보관함에 저장했어요");$("sub").textContent="✅ 저장됨 · 📁 보관함에서 받을 수 있어요"};
 }
-function getAll(){return new Promise(res=>{const out=[];const tx=db.transaction(STORE,"readonly");const c=tx.objectStore(STORE).openCursor(null,"prev");c.onsuccess=e=>{const cur=e.target.result;if(cur){out.push(cur.value);cur.continue();}else res(out);};});}
-function del(id){return new Promise(res=>{const tx=db.transaction(STORE,"readwrite");tx.objectStore(STORE).delete(id);tx.oncomplete=res;});}
+function all(){return new Promise(res=>{if(!db)return res([]);const out=[];db.transaction("recs").objectStore("recs").openCursor(null,"prev").onsuccess=e=>{const c=e.target.result;if(c){out.push(c.value);c.continue()}else res(out)}})}
+function del(id){return new Promise(res=>{const tx=db.transaction("recs","readwrite");tx.objectStore("recs").delete(id);tx.oncomplete=res})}
+
+function stamp(d){const p=n=>String(n).padStart(2,"0");return d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+"_"+p(d.getHours())+p(d.getMinutes())}
+function download(blob,name){const u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)}
+function textFile(it){
+  const d=new Date(it.date);
+  return "🎙️ 보이스 녹음 기록\n"+
+    "날짜: "+d.toLocaleString("ko-KR")+"\n길이: "+fmt(it.dur)+"\n언어: "+nameOf(it.from)+" → "+nameOf(it.to)+"\n\n"+
+    "──── 🗣️ 원문 ────\n"+(it.src||"(받아쓴 내용 없음)")+"\n\n"+
+    "──── 🌐 번역 ────\n"+(it.tr||"(번역 없음)")+"\n";
+}
+
 async function renderList(){
-  const list=$("recList");const items=await getAll();
-  if(!items.length){list.innerHTML='<div class="hint">아직 녹음이 없습니다.</div>';return;}
-  list.innerHTML="";
+  await dbReady;const items=await all();const L=$("list");
+  if(!items.length){L.innerHTML='<div class="empty"><div>📭</div>아직 녹음이 없어요</div>';return}
+  L.innerHTML="";
   items.forEach(it=>{
-    const url=URL.createObjectURL(it.blob);const d=new Date(it.date);
-    const el=document.createElement("div");el.className="rec-item";
-    el.innerHTML=`<div class="meta"><b>${d.toLocaleString("ko-KR")}</b><div class="muted-sm">${fmt(it.dur)}${it.text?" · 받아쓰기 있음":""}</div><audio controls src="${url}"></audio>${it.text?`<div class="hint">📝 ${escapeHtml(it.text).slice(0,220)}</div>`:""}</div>`;
-    const btns=document.createElement("div");btns.style.display="flex";btns.style.flexDirection="column";btns.style.gap="7px";
-    const dl=document.createElement("button");dl.className="btn ghost small";dl.textContent="저장";dl.onclick=()=>{const a=document.createElement("a");a.href=url;a.download="녹음_"+it.id+(it.blob.type.includes("mp4")?".m4a":".webm");a.click();};
-    const rm=document.createElement("button");rm.className="btn ghost small";rm.textContent="삭제";rm.onclick=async()=>{await del(it.id);renderList();};
-    btns.appendChild(dl);btns.appendChild(rm);el.appendChild(btns);list.appendChild(el);
+    const d=new Date(it.date),url=URL.createObjectURL(it.blob),base="voice_"+stamp(d);
+    const ext=it.blob.type.includes("mp4")?".m4a":".webm";
+    const el=document.createElement("div");el.className="item";
+    el.innerHTML=`<div class="item-h">🗓️ ${d.toLocaleString("ko-KR",{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})}<span>⏱️ ${fmt(it.dur)}</span></div>
+      <audio controls preload="metadata" src="${url}"></audio>
+      ${it.src?`<div class="lbl src">🗣️ 원문 · ${esc(nameOf(it.from))}</div><div class="text">${esc(it.src)}</div>`:""}
+      ${it.tr?`<div class="lbl tr">🌐 번역 · ${esc(nameOf(it.to))}</div><div class="text tr">${esc(it.tr)}</div>`:""}
+      <div class="dl"><button class="a">🎧 음성 받기</button><button class="t">📝 텍스트 받기</button><button class="x" aria-label="삭제">🗑️</button></div>`;
+    el.querySelector(".a").onclick=()=>{download(it.blob,base+ext);toast("🎧 음성 파일을 받았어요")};
+    el.querySelector(".t").onclick=()=>{download(new Blob(["﻿"+textFile(it)],{type:"text/plain;charset=utf-8"}),base+".txt");toast("📝 텍스트 파일을 받았어요")};
+    el.querySelector(".x").onclick=async()=>{if(confirm("이 녹음을 지울까요?")){await del(it.id);renderList()}};
+    L.appendChild(el);
   });
 }
 
-// init
-setBars();openDB().catch(()=>toast("저장소 사용 불가"));
-if(!SR)$("recStatus").textContent="녹음 가능 (실시간 받아쓰기는 Chrome 권장)";
+/* 텍스트 번역 (입력 즉시) */
+const runText=debounce(async()=>{
+  const v=$("srcText").value.trim(),o=$("outBox");
+  if(!v){o.innerHTML='<span class="ph">번역 결과가 여기에 나와요</span>';return}
+  o.innerHTML='<span class="ph">번역 중…</span>';
+  try{o.textContent=await translate(v,$("srcLang").value,$("tgtLang").value)}catch{o.innerHTML='<span class="ph">⚠️ 인터넷 연결을 확인해 주세요</span>'}
+},450);
+$("srcText").addEventListener("input",runText);$("srcLang").addEventListener("change",runText);$("tgtLang").addEventListener("change",runText);
+$("swap").onclick=()=>{const a=$("srcLang").value;$("srcLang").value=$("tgtLang").value;$("tgtLang").value=a;
+  store.set("srcLang",$("srcLang").value);store.set("tgtLang",$("tgtLang").value);
+  const o=$("outBox").textContent;if(o&&!$("outBox").querySelector(".ph"))$("srcText").value=o;runText()};
+$("clearIn").onclick=()=>{$("srcText").value="";runText()};
+$("copyOut").onclick=()=>{const o=$("outBox");if(o.querySelector(".ph"))return toast("복사할 내용이 없어요");navigator.clipboard.writeText(o.textContent).then(()=>toast("📋 복사했어요"))};
+$("speak").onclick=()=>{const o=$("outBox");if(o.querySelector(".ph"))return;const u=new SpeechSynthesisUtterance(o.textContent);u.lang=$("tgtLang").value;speechSynthesis.cancel();speechSynthesis.speak(u)};
+
 if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
 </body>
