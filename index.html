@@ -61,6 +61,14 @@
   .text.tr{color:#0b7a5a}
   .ph{color:var(--muted);font-size:15px}
   .interim{color:var(--muted)}
+  .in-wrap{position:relative}
+  .in-wrap textarea{padding-bottom:64px}
+  .in-mic{position:absolute;right:10px;bottom:14px;width:50px;height:50px;border-radius:50%;border:none;cursor:pointer;
+    background:var(--blueSoft);font-size:23px;line-height:50px;padding:0;transition:transform .1s,background .2s}
+  .in-mic:active{transform:scale(.92)}
+  .in-mic.on{background:var(--red);animation:ring 1.6s infinite}
+  .in-hint{font-size:13px;color:var(--red);font-weight:600;min-height:0;margin-top:8px}
+  .in-hint:empty{display:none}
   .mini{border:none;background:#f1f3f7;border-radius:10px;padding:7px 11px;font-size:13px;font-weight:600;cursor:pointer;color:var(--txt);font-family:inherit}
 
   textarea{width:100%;min-height:120px;border:1.5px solid var(--line);background:#fafbfd;border-radius:14px;
@@ -145,7 +153,11 @@
     </div>
     <div class="card">
       <div class="pane-h"><b>✏️ 입력</b><button class="mini" id="clearIn">🧹 지우기</button></div>
-      <textarea id="srcText" placeholder="입력하면 바로 번역돼요"></textarea>
+      <div class="in-wrap">
+        <textarea id="srcText" placeholder="입력하거나 🎙️ 누르고 말하면 바로 번역돼요"></textarea>
+        <button class="in-mic" id="inMic" aria-label="음성으로 입력">🎙️</button>
+      </div>
+      <div class="in-hint" id="inHint"></div>
     </div>
     <div class="card">
       <div class="pane-h"><b>🌐 번역</b>
@@ -324,6 +336,30 @@ $("swap").onclick=()=>{const a=$("srcLang").value;$("srcLang").value=$("tgtLang"
   store.set("srcLang",$("srcLang").value);store.set("tgtLang",$("tgtLang").value);
   const o=$("outBox").textContent;if(o&&!$("outBox").querySelector(".ph"))$("srcText").value=o;runText()};
 $("clearIn").onclick=()=>{$("srcText").value="";runText()};
+
+/* 🎙️ 입력칸 음성 입력 */
+let dict=null,dictBase="";
+function stopDict(){
+  if(dict){dict.onend=null;try{dict.stop()}catch{}dict=null}
+  $("inMic").classList.remove("on");$("inMic").textContent="🎙️";$("inHint").textContent="";
+}
+$("inMic").onclick=()=>{
+  if(dict)return stopDict();
+  if(!SR)return toast("🎙️ 음성 입력은 Chrome에서 돼요");
+  if(mr&&mr.state==="recording")return toast("녹음 중에는 쓸 수 없어요");
+  dictBase=$("srcText").value.trim();
+  dict=new SR();dict.lang=$("srcLang").value;dict.continuous=true;dict.interimResults=true;
+  dict.onresult=e=>{
+    let s="";for(let i=0;i<e.results.length;i++)s+=e.results[i][0].transcript;
+    $("srcText").value=(dictBase?dictBase+" ":"")+s.trim();runText();
+  };
+  dict.onerror=e=>{if(e.error==="not-allowed"||e.error==="service-not-allowed")toast("🎙️ 마이크 권한을 허용해 주세요")};
+  dict.onend=()=>stopDict();
+  try{dict.start()}catch{stopDict();return}
+  $("inMic").classList.add("on");$("inMic").textContent="⏹️";
+  $("inHint").textContent="🔴 듣고 있어요… 말씀하세요 (다시 누르면 멈춤)";
+};
+document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>dict&&stopDict()));
 $("copyOut").onclick=()=>{const o=$("outBox");if(o.querySelector(".ph"))return toast("복사할 내용이 없어요");navigator.clipboard.writeText(o.textContent).then(()=>toast("📋 복사했어요"))};
 $("speak").onclick=()=>{const o=$("outBox");if(o.querySelector(".ph"))return;const u=new SpeechSynthesisUtterance(o.textContent);u.lang=$("tgtLang").value;speechSynthesis.cancel();speechSynthesis.speak(u)};
 

@@ -1,4 +1,4 @@
-const CACHE = "vr-cache-v3";
+const CACHE = "vr-cache-v4";
 const ASSETS = [
   "./",
   "./index.html",
